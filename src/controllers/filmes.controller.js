@@ -44,6 +44,19 @@ exports.getByCodigo = (req, res, next)=>{
     }); 
 }
 
+//listando por ator
+exports.getByAtor = (req, res, next)=>{
+    //filtrando o select por nome/genero/lancamento_data
+    filmeModel.findOne({ator: req.params.ator},'codigo nome genero lancamento_data').then(data =>{
+        //se der tudo certo ele lista
+        res.status(200).send({data});
+    }).catch(e =>{
+        //se não, mensagem de erro
+        res.status(400).send({e});
+    }); 
+}
+
+
 
 //create
 exports.post = (req, res, next) =>{

@@ -14,6 +14,9 @@ router.get('/admin/:id', controller.getById)
 //listando por codigo
 router.get('/:codigo', controller.getByCodigo)
 
+//listando por ator
+router.get('/ator/:ator', controller.getByAtor)
+
 //criando rota de create
 router.post('/', controller.post);
 
