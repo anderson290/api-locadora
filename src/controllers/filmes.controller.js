@@ -1,86 +1,125 @@
 'use extrict'
-const mongoose = require('mongoose');
 
-//importando modulo de filmes
-require('../models/filme.model');
-const filmeModel = mongoose.model('Filme');
+//importando objeto de validação
+const validatorContract = require('../validators/filmes.validator');
+
+//importando repositório
+const repository = require('../repositories/filme.repositorie');
+
+/*SUBSTITUINDO ESTE CODIGO
+    .then(data =>{
+        //se der tudo certo ele lista
+        res.status(200).send({data});
+    }).catch(e =>{
+        //se não, mensagem de erro
+        res.status(400).send({e});
+    });  
+        POR ASYNC E AWAIT    
+*/
 
 //listando
-exports.get = (req, res, next)=>{
-    //filtrando o select por nome/genero/lancamento_data
-    filmeModel.find({}, 'nome genero lancamento_data').then(data =>{
-        //se der tudo certo ele lista
-        res.status(200).send({data});
-    }).catch(e =>{
-        //se não, mensagem de erro
-        res.status(400).send({e});
-    }); 
+exports.get = async(req, res, next)=>{
+   //chamando repositorio com a função get
+   try{
+        var data = await repository.get();
+        res.status(200).send(data);
+   }catch(e){
+        res.status(500).send({
+            message: 'Falha ao processar a requisição!'
+        });
+   }
+   
 }
 //listando por ID
-exports.getById = (req, res, next)=>{
-    //filtrando o select por nome/genero/lancamento_data
-    filmeModel.findById(req.params.id)
-        .then(data =>{
-        //se der tudo certo ele lista
-        res.status(200).send({data});
-    }).catch(e =>{
-        //se não, mensagem de erro
-        res.status(400).send({e});
-    }); 
+exports.getById = async(req, res, next)=>{
+    //chamando repositorio com a função getById
+    try{
+        var dataId = await repository.getById(req.params.id);
+        res.status(200).send(dataId);
+    }catch(e){
+        res.status(500).send({
+            message: 'Falha ao processar a requisição!'
+        });
+   }
+    
 }
-
-
-
-
 //listando por código
-exports.getByCodigo = (req, res, next)=>{
-    //filtrando o select por nome/genero/lancamento_data
-    filmeModel.findOne({codigo: req.params.codigo}, 'codigo nome genero lancamento_data ator').then(data =>{
-        //se der tudo certo ele lista
-        res.status(200).send({data});
-    }).catch(e =>{
-        //se não, mensagem de erro
-        res.status(400).send({e});
-    }); 
-}
-
+exports.getByCodigo = async(req, res, next)=>{
+    try{
+        var dataCod = await repository.getByCodigo(req.params.codigo)
+        res.status(200).send(dataCod);   
+    }catch(e){
+        res.status(500).send({
+            message: 'Falha ao processar a requisição!'
+        });
+   }
+};
 //listando por ator
-exports.getByAtor = (req, res, next)=>{
-    //filtrando o select por nome/genero/lancamento_data
-    filmeModel.findOne({ator: req.params.ator},'codigo nome genero lancamento_data').then(data =>{
-        //se der tudo certo ele lista
-        res.status(200).send({data});
-    }).catch(e =>{
-        //se não, mensagem de erro
-        res.status(400).send({e});
-    }); 
+exports.getByAtor = async(req, res, next)=>{
+    try{
+        var dataAtor = await repository.getByAtor(req.params.ator);
+        res.status(200).send(dataAtor);  
+    }
+    catch(e){
+        res.status(500).send({
+            message: 'Falha ao processar a requisição!'
+        });
+   }
 }
-
-
 
 //create
-exports.post = (req, res, next) =>{
+exports.post = async(req, res, next) =>{
+    //aplicando validações
+    let contract = new validatorContract();
 
-    //instanciando a model e passando os paramentros 
-    var filme = new filmeModel(req.body);
-    //salvando item no banco
-    filme.save().then(x =>{
-        //se der tudo certo ele grava
-        res.status(201).send({message: 'Filme Cadastrado =D'});
-    }).catch(e =>{
-        //se não, mensagem de erro
-        res.status(400).send({message: 'Filme não Cadastrado =C', data: e});
-    });
+    //validando pelo tamanho do filme digitado
+    contract.hasMinLen(req.body.nome, 6, 'O nome do filme deve conter pelo menos 6 letras');
+
+    //validando pelo tamanho de genero digitado
+    contract.hasMinLen(req.body.genero, 6, 'O nome do filme deve conter pelo menos 6 letras');
+
+    //validando pelo tamanho da data de lançamento
+    contract.hasMinLen(req.body.lancamento_data, 10, 'A data de lançamento do filme deve conter pelo menos 10 caracteres');
+
+    //verificando se os dados inputados estão inválidos
+    if(!contract.isValid()){
+        res.status(400).send(contract.errors()).end();
+        return;
+    }
+    try{
+        await repository.create(req.body);
+        res.status(200).send({message: 'Filme Cadastrado =D'});  
+    } catch(e){
+        res.status(500).send({
+            message: 'Falha ao processar a requisição!' + e
+        });
+   }
+     
    
 };
 
 //update
-exports.put = (req, res, next) =>{
-    const id = req.params.id;
-    res.status(201).send({id: id, item: req.body});
-};
+exports.put = async(req, res, next) =>{
+    try{
+        
+        var dataUpdate = await  repository.update(req.params.id, req.body);
+        res.status(200).send({message: 'Filme Atualizado =D'});
+
+    }catch(e){
+        res.status(500).send({
+            message: 'Falha ao processar a requisição!'
+        });
+    }
+};  
 
 //delete
-exports.delete = (req, res, next) =>{
-    res.status(200).send(req.body);
+exports.delete = async(req, res, next) =>{
+    try{
+        var dataDel = await repository.delete(req.params.id);
+        res.status(200).send({message: 'Filme deletado =D'});
+    }catch(e){
+        res.status(500).send({
+            message: 'Falha ao processar a requisição!'
+        });
+    }
 };

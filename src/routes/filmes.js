@@ -21,9 +21,9 @@ router.get('/ator/:ator', controller.getByAtor)
 router.post('/', controller.post);
 
 //UPDATE
-router.put('/:codigo',controller.put);
+router.put('/:id', controller.put);
 
 //DELETE
-router.delete('/', controller.delete);
+router.delete('/:id', controller.delete);
 
 module.exports = router;
