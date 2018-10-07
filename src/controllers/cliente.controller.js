@@ -9,6 +9,9 @@ const repository = require('../repositories/cliente.repositorie');
 //import para encriptar senha
 const md5 = require('md5');
 
+//importando authenticador
+const authService = require('../Services/auth.service');
+
 //importando serviço email
 const emailServico = require('../Services/email.service');
 
@@ -66,6 +69,42 @@ exports.post = async(req, res, next) =>{
             'Bem vindo à livraria',
             global.EMAIL_TMPL.replace('{0}', req.body.name));
         res.status(200).send({message: 'Cliente Cadastrado =D'});  
+    } catch(e){
+        res.status(500).send({
+            message: 'Falha ao processar a requisição!'+e
+        });
+   }   
+   
+
+};
+
+//create auth
+exports.autenticando = async(req, res, next) =>{
+    
+    try{
+        const cliente = await repository.authenticate({
+            //compondo create para encriptar senha
+            email: req.body.email,
+            //encriptando senha
+            senha: md5(req.body.senha)+global.SALT_KEY            
+        });
+        console.log(cliente);
+        if(!cliente){
+            res.status(404).send({
+                message: 'Usuario e/ou Senha inválidos'
+            });
+            return;
+        }
+             const token = await authService.generateToken({
+                 email: cliente.email, nome: cliente.nome
+            });
+        res.status(200).send({
+            token: token,
+            data:{
+                email: cliente.email, 
+                nome: cliente.nome
+            },
+            message: 'Cliente Autenticado =D'}); 
     } catch(e){
         res.status(500).send({
             message: 'Falha ao processar a requisição!'+e

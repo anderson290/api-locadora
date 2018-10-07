@@ -5,6 +5,9 @@ const router = express.Router();
 //importando controller
 const controller = require('../controllers/filmes.controller');
 
+//importando verificação por token
+const authService = require('../Services/auth.service');
+
 //rota de listagem
 router.get('/', controller.get)
 
@@ -18,7 +21,8 @@ router.get('/:codigo', controller.getByCodigo)
 router.get('/ator/:ator', controller.getByAtor)
 
 //criando rota de create
-router.post('/', controller.post);
+//autorizando por token
+router.post('/', authService.authorize, controller.post);
 
 //UPDATE
 router.put('/:id', controller.put);

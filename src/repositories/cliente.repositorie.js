@@ -22,3 +22,10 @@ exports.create = async(data)=>{
     await cliente.save();
     
 }
+exports.authenticate = async(data)=> {
+    const res = await clienteModel.findOne({
+        email: data.email,
+        senha: data.senha 
+    });
+    return res;
+}
